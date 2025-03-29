@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.exam.controllers.teacher.QuestionManagementController"
+      spacing="10"
+      stylesheets="@../../css/styles.css"
+      prefHeight="600.0" prefWidth="800.0">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <children>
+        <!-- Header -->
+        <Label text="Question Management" styleClass="title-label"/>
+
+        <!-- Subject Selection -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Subject:"/>
+            <ComboBox fx:id="subjectComboBox" promptText="Select subject" 
+                     HBox.hgrow="ALWAYS"/>
+        </HBox>
+
+        <!-- Search and Add Section -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <TextField fx:id="searchField" promptText="Search questions..." 
+                      HBox.hgrow="ALWAYS"/>
+            <Button text="Add New Question" onAction="#handleAddNew"/>
+        </HBox>
+
+        <!-- Table -->
+        <TableView fx:id="questionTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="questionIdColumn" text="ID" prefWidth="60"/>
+                <TableColumn fx:id="questionTextColumn" text="Question" prefWidth="400"/>
+                <TableColumn fx:id="levelColumn" text="Level" prefWidth="80"/>
+                <TableColumn fx:id="actionsColumn" text="Actions" prefWidth="120"/>
+            </columns>
+        </TableView>
+
+        <!-- Form Section -->
+        <VBox fx:id="formSection" spacing="10" styleClass="form-container" visible="false">
+            <Label text="Question Details" styleClass="subtitle-label"/>
+            
+            <GridPane hgap="10" vgap="10">
+                <Label text="Level:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <ComboBox fx:id="levelComboBox" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                    <items>
+                        <FXCollections fx:factory="observableArrayList">
+                            <String fx:value="A"/>
+                            <String fx:value="B"/>
+                            <String fx:value="C"/>
+                        </FXCollections>
+                    </items>
+                </ComboBox>
+                
+                <Label text="Question:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <TextArea fx:id="questionField" promptText="Enter question text"
+                         prefRowCount="3" wrapText="true"
+                         GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                <Label text="Option A:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <TextField fx:id="optionAField" promptText="Enter option A"
+                          GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                <Label text="Option B:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                <TextField fx:id="optionBField" promptText="Enter option B"
+                          GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
+                <Label text="Option C:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                <TextField fx:id="optionCField" promptText="Enter option C"
+                          GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+
+                <Label text="Option D:" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+                <TextField fx:id="optionDField" promptText="Enter option D"
+                          GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+
+                <Label text="Correct Answer:" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
+                <ComboBox fx:id="answerComboBox" GridPane.columnIndex="1" GridPane.rowIndex="6">
+                    <items>
+                        <FXCollections fx:factory="observableArrayList">
+                            <String fx:value="A"/>
+                            <String fx:value="B"/>
+                            <String fx:value="C"/>
+                            <String fx:value="D"/>
+                        </FXCollections>
+                    </items>
+                </ComboBox>
+            </GridPane>
+
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button text="Cancel" onAction="#handleCancel" 
+                        styleClass="cancel-button"/>
+                <Button text="Save" onAction="#handleSave" 
+                        styleClass="save-button"/>
+            </HBox>
+        </VBox>
+
+        <!-- Message Display -->
+        <Label fx:id="messageLabel" styleClass="message-label"/>
+    </children>
+</VBox>

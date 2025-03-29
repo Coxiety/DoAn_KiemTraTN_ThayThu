@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.exam.controllers.teacher.QuestionPreviewController"
+      spacing="15"
+      stylesheets="@../../css/styles.css"
+      prefWidth="600.0">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <children>
+        <!-- Header -->
+        <Label text="Question Preview" styleClass="title-label"/>
+        <Label fx:id="subjectLabel" styleClass="info-label"/>
+
+        <!-- Question Content -->
+        <VBox spacing="10" styleClass="question-container">
+            <Label fx:id="questionNumberLabel" styleClass="subtitle-label"/>
+            <TextFlow fx:id="questionTextFlow" styleClass="question-text"/>
+            
+            <VBox spacing="8" styleClass="options-container">
+                <RadioButton fx:id="optionA" styleClass="option-radio" text="A"/>
+                <RadioButton fx:id="optionB" styleClass="option-radio" text="B"/>
+                <RadioButton fx:id="optionC" styleClass="option-radio" text="C"/>
+                <RadioButton fx:id="optionD" styleClass="option-radio" text="D"/>
+            </VBox>
+        </VBox>
+
+        <!-- Footer -->
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <Label text="Correct Answer:" styleClass="answer-label"/>
+            <Label fx:id="correctAnswerLabel" styleClass="answer-value"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Close" onAction="#handleClose" 
+                    styleClass="cancel-button"/>
+        </HBox>
+    </children>
+
+</VBox>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.exam.controllers.teacher.RegistrationManagementController"
+      spacing="10"
+      stylesheets="@../../css/styles.css"
+      prefWidth="800.0">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <children>
+        <!-- Header -->
+        <Label text="Subject Registration Management" styleClass="title-label"/>
+
+        <!-- Available Subjects Section -->
+        <VBox spacing="10">
+            <Label text="Available Subjects" styleClass="subtitle-label"/>
+            
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <TextField fx:id="searchField" promptText="Search subjects..." 
+                          HBox.hgrow="ALWAYS"/>
+            </HBox>
+
+            <TableView fx:id="subjectTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="codeColumn" text="Code" prefWidth="100"/>
+                    <TableColumn fx:id="nameColumn" text="Subject Name" prefWidth="400"/>
+                    <TableColumn fx:id="teachersColumn" text="Teachers" prefWidth="100"/>
+                    <TableColumn fx:id="actionsColumn" text="Actions" prefWidth="150"/>
+                </columns>
+            </TableView>
+        </VBox>
+
+        <!-- Registration Section -->
+        <VBox fx:id="registrationForm" spacing="10" styleClass="form-container" visible="false">
+            <Label text="Registration Details" styleClass="subtitle-label"/>
+            
+            <GridPane hgap="10" vgap="10">
+                <Label text="Subject:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <Label fx:id="selectedSubjectLabel" styleClass="info-label"
+                       GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                <Label text="Role:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <ComboBox fx:id="roleComboBox" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                    <items>
+                        <FXCollections fx:factory="observableArrayList">
+                            <String fx:value="GIAOVIEN"/>
+                            <String fx:value="GIAMTHI"/>
+                        </FXCollections>
+                    </items>
+                </ComboBox>
+            </GridPane>
+
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button text="Cancel" onAction="#handleCancel" 
+                        styleClass="cancel-button"/>
+                <Button text="Register" onAction="#handleRegister" 
+                        styleClass="save-button"/>
+            </HBox>
+        </VBox>
+
+        <!-- My Registrations Section -->
+        <VBox spacing="10">
+            <Label text="My Registrations" styleClass="subtitle-label"/>
+            
+            <TableView fx:id="registrationTable">
+                <columns>
+                    <TableColumn fx:id="regCodeColumn" text="Code" prefWidth="100"/>
+                    <TableColumn fx:id="regNameColumn" text="Subject Name" prefWidth="400"/>
+                    <TableColumn fx:id="roleColumn" text="Role" prefWidth="100"/>
+                    <TableColumn fx:id="regActionsColumn" text="Actions" prefWidth="150"/>
+                </columns>
+            </TableView>
+        </VBox>
+
+        <!-- Message Display -->
+        <Label fx:id="messageLabel" styleClass="message-label"/>
+    </children>
+
+</VBox>

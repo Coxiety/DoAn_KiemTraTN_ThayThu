@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.exam.controllers.teacher.AddStudentDialogController"
+      spacing="10"
+      stylesheets="@../../css/styles.css"
+      prefWidth="600.0">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <children>
+        <!-- Header -->
+        <Label text="Add Students to Class" styleClass="title-label"/>
+        <Label fx:id="classInfoLabel" styleClass="info-label"/>
+
+        <!-- Search Box -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <TextField fx:id="searchField" promptText="Search students..." 
+                      HBox.hgrow="ALWAYS"/>
+        </HBox>
+
+        <!-- Student Table -->
+        <TableView fx:id="studentTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="studentIdColumn" text="Student ID" prefWidth="100"/>
+                <TableColumn fx:id="nameColumn" text="Student Name" prefWidth="200"/>
+                <TableColumn fx:id="currentClassColumn" text="Current Class" prefWidth="150"/>
+            </columns>
+        </TableView>
+
+        <!-- Buttons -->
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <children>
+                <Button text="Cancel" onAction="#handleCancel" 
+                        styleClass="cancel-button"/>
+                <Button text="Add Selected" onAction="#handleAddSelected" 
+                        styleClass="save-button"/>
+            </children>
+        </HBox>
+
+        <!-- Message Display -->
+        <Label fx:id="messageLabel" styleClass="message-label"/>
+    </children>
+
+</VBox>

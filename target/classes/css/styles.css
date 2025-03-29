@@ -1,0 +1,172 @@
+/* General Styles */
+.root {
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-font-size: 14px;
+    -fx-background-color: #f5f5f5;
+}
+
+/* Title Labels */
+.title-label {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 0 10 0;
+}
+
+.subtitle-label {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-padding: 5 0 5 0;
+}
+
+.info-label {
+    -fx-font-size: 16px;
+    -fx-text-fill: #666666;
+}
+
+/* Form Styles */
+.form-container {
+    -fx-background-color: white;
+    -fx-padding: 20px;
+    -fx-spacing: 10px;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 5px;
+}
+
+/* Button Styles */
+.button {
+    -fx-background-color: #2196f3;
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+    -fx-padding: 8 15 8 15;
+}
+
+.button:hover {
+    -fx-background-color: #1976d2;
+}
+
+.menu-button {
+    -fx-pref-width: 200px;
+    -fx-font-size: 16px;
+    -fx-padding: 15px;
+}
+
+.save-button {
+    -fx-background-color: #4caf50;
+}
+
+.save-button:hover {
+    -fx-background-color: #388e3c;
+}
+
+.cancel-button {
+    -fx-background-color: #f44336;
+}
+
+.cancel-button:hover {
+    -fx-background-color: #d32f2f;
+}
+
+.logout-button {
+    -fx-background-color: #757575;
+}
+
+.logout-button:hover {
+    -fx-background-color: #616161;
+}
+
+/* Table Styles */
+.table-view {
+    -fx-background-color: white;
+    -fx-border-color: #cccccc;
+}
+
+.table-view .column-header {
+    -fx-background-color: #2196f3;
+    -fx-text-fill: white;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #bbdefb;
+}
+
+/* Question Preview Styles */
+.question-container {
+    -fx-background-color: white;
+    -fx-padding: 20px;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 5px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);
+}
+
+.question-text {
+    -fx-font-size: 16px;
+    -fx-padding: 10px;
+    -fx-wrap-text: true;
+}
+
+.options-container {
+    -fx-padding: 10px;
+}
+
+.option-radio {
+    -fx-font-size: 14px;
+    -fx-padding: 5px;
+}
+
+.answer-label {
+    -fx-font-weight: bold;
+}
+
+.answer-value {
+    -fx-text-fill: #4caf50;
+    -fx-font-weight: bold;
+}
+
+/* Message Labels */
+.message-label {
+    -fx-padding: 5px;
+    -fx-font-weight: bold;
+}
+
+/* ComboBox Styles */
+.combo-box {
+    -fx-background-color: white;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 3px;
+}
+
+.combo-box:focused {
+    -fx-border-color: #2196f3;
+}
+
+/* TextField Styles */
+.text-field {
+    -fx-background-color: white;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 3px;
+    -fx-padding: 5px;
+}
+
+.text-field:focused {
+    -fx-border-color: #2196f3;
+}
+
+/* TextArea Styles */
+.text-area {
+    -fx-background-color: white;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 3px;
+}
+
+.text-area:focused {
+    -fx-border-color: #2196f3;
+}
+
+.text-area .content {
+    -fx-background-color: white;
+}

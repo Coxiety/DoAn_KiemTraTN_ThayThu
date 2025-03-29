@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.exam.controllers.teacher.TeacherDashboardController"
+      spacing="20"
+      stylesheets="@../../css/styles.css"
+      prefHeight="600.0" prefWidth="800.0">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <children>
+        <!-- Header Section -->
+        <VBox alignment="CENTER" spacing="10">
+            <Label fx:id="welcomeLabel" styleClass="title-label"/>
+            <Label fx:id="teacherInfoLabel" styleClass="info-label"/>
+        </VBox>
+
+        <!-- Main Menu Section -->
+        <VBox spacing="15" alignment="CENTER" VBox.vgrow="ALWAYS">
+            <Button text="Manage Classes" 
+                    onAction="#handleManageClasses"
+                    styleClass="menu-button"
+                    maxWidth="300"/>
+                    
+            <Button text="Manage Subjects" 
+                    onAction="#handleManageSubjects"
+                    styleClass="menu-button"
+                    maxWidth="300"/>
+                    
+            <Button text="Subject Registrations" 
+                    onAction="#handleSubjectRegistrations"
+                    styleClass="menu-button"
+                    maxWidth="300"/>
+                    
+            <Button text="Manage Questions" 
+                    onAction="#handleManageQuestions"
+                    styleClass="menu-button"
+                    maxWidth="300"/>
+                    
+            <Button text="Prepare Exam" 
+                    onAction="#handlePrepareExam"
+                    styleClass="menu-button"
+                    maxWidth="300"/>
+                    
+            <Button text="View Results" 
+                    onAction="#handleViewResults"
+                    styleClass="menu-button"
+                    maxWidth="300"/>
+        </VBox>
+
+        <!-- Footer Section -->
+        <HBox alignment="CENTER">
+            <Button text="Logout" 
+                    onAction="#handleLogout"
+                    styleClass="logout-button"/>
+        </HBox>
+    </children>
+</VBox>
