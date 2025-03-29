@@ -2,11 +2,16 @@ package com.exam.controllers.teacher;
 
 import java.net.URL;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.exam.dao.LopDAO;
 import com.exam.dao.SinhVienDAO;
+import com.exam.dao.impl.LopDAOImpl;
 import com.exam.dao.impl.SinhVienDAOImpl;
 import com.exam.models.Lop;
 import com.exam.models.SinhVien;
@@ -16,123 +21,257 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Label;
-import javafx.scene.control.SelectionMode;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 
+/**
+ * Controller for the Add Student Dialog
+ */
 public class AddStudentDialogController implements Initializable {
-    private static final Logger LOGGER = Logger.getLogger(AddStudentDialogController.class.getName());
+
+    @FXML private TextField txtMaSV;
+    @FXML private TextField txtHo;
+    @FXML private TextField txtTen;
+    @FXML private DatePicker datePicker;
+    @FXML private TextField txtDiaChi;
+    @FXML private ComboBox<Lop> comboLop;
+    @FXML private Button btnAdd;
+    @FXML private Button btnCancel;
+    @FXML private TableView<SinhVien> tblStudents;
+    @FXML private TableColumn<SinhVien, String> colMaSV;
+    @FXML private TableColumn<SinhVien, String> colHo;
+    @FXML private TableColumn<SinhVien, String> colTen;
+    @FXML private TableColumn<SinhVien, Date> colNgaySinh;
+    @FXML private TableColumn<SinhVien, String> colDiaChi;
+    @FXML private TableColumn<SinhVien, String> colLop;
+    @FXML private Button btnAssign;
+    @FXML private Button btnRemove;
     
     private final SinhVienDAO sinhVienDAO = new SinhVienDAOImpl();
-    private final ObservableList<SinhVien> studentList = FXCollections.observableArrayList();
-    private Lop selectedClass;
-    private Runnable onStudentsAdded;
-
-    @FXML private Label classInfoLabel;
-    @FXML private TextField searchField;
-    @FXML private TableView<SinhVien> studentTable;
-    @FXML private TableColumn<SinhVien, String> studentIdColumn;
-    @FXML private TableColumn<SinhVien, String> nameColumn;
-    @FXML private TableColumn<SinhVien, String> currentClassColumn;
-    @FXML private Label messageLabel;
-
+    private final LopDAO lopDAO = new LopDAOImpl();
+    
+    private ObservableList<SinhVien> studentData = FXCollections.observableArrayList();
+    private ObservableList<Lop> classData = FXCollections.observableArrayList();
+    private Lop preselectedClass = null;
+    private Runnable onCloseCallback = null;
+    
+    /**
+     * Set data for the dialog
+     * @param lop The class to preselect
+     * @param callback Callback to run when dialog is closed
+     */
+    public void setData(Lop lop, Runnable callback) {
+        this.preselectedClass = lop;
+        this.onCloseCallback = callback;
+        
+        // If class is already loaded, select it
+        if (lop != null && comboLop != null && comboLop.getItems() != null) {
+            for (Lop item : comboLop.getItems()) {
+                if (item.getMaLop().equals(lop.getMaLop())) {
+                    comboLop.getSelectionModel().select(item);
+                    break;
+                }
+            }
+        }
+    }
+    
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        setupTable();
-        setupSearch();
-        loadStudents();
+        setupTableColumns();
+        loadClassData();
+        loadStudentData();
+        setupButtons();
     }
-
-    private void setupTable() {
-        studentIdColumn.setCellValueFactory(data -> 
-            new SimpleStringProperty(data.getValue().getMaSV()));
-            
-        nameColumn.setCellValueFactory(data -> 
-            new SimpleStringProperty(data.getValue().getHoTen()));
-            
-        currentClassColumn.setCellValueFactory(data -> {
+    
+    private void setupTableColumns() {
+        colMaSV.setCellValueFactory(new PropertyValueFactory<>("maSV"));
+        colHo.setCellValueFactory(new PropertyValueFactory<>("ho"));
+        colTen.setCellValueFactory(new PropertyValueFactory<>("ten"));
+        colNgaySinh.setCellValueFactory(new PropertyValueFactory<>("ngaySinh"));
+        colDiaChi.setCellValueFactory(new PropertyValueFactory<>("diaChi"));
+        colLop.setCellValueFactory(cellData -> {
             try {
-                String maLop = sinhVienDAO.getStudentClass(data.getValue().getMaSV());
-                return new SimpleStringProperty(maLop != null ? maLop : "Not Assigned");
-            } catch (SQLException e) {
-                LOGGER.log(Level.SEVERE, "Error getting student class", e);
-                return new SimpleStringProperty("Error");
-            }
-        });
-
-        studentTable.setItems(studentList);
-        studentTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-    }
-
-    private void setupSearch() {
-        searchField.textProperty().addListener((obs, old, text) -> {
-            try {
-                if (text == null || text.isEmpty()) {
-                    loadStudents();
-                } else {
-                    studentList.setAll(sinhVienDAO.searchByName(text));
+                String maLop = sinhVienDAO.getStudentClass(cellData.getValue().getMaSV());
+                for (Lop lop : classData) {
+                    if (lop.getMaLop().equals(maLop)) {
+                        return new SimpleStringProperty(lop.getTenLop());
+                    }
                 }
+                return new SimpleStringProperty("");
             } catch (SQLException e) {
-                LOGGER.log(Level.SEVERE, "Error searching students", e);
-                showError("Error searching students");
+                Logger.getLogger(AddStudentDialogController.class.getName())
+                      .log(Level.SEVERE, "Error getting student class", e);
+                return new SimpleStringProperty("");
             }
         });
+        
+        tblStudents.setItems(studentData);
     }
-
-    private void loadStudents() {
+    
+    private void loadClassData() {
         try {
-            studentList.setAll(sinhVienDAO.findAll());
+            classData.clear();
+            classData.addAll(lopDAO.findAll());
+            comboLop.setItems(classData);
+            
+            // Apply preselected class if available
+            if (preselectedClass != null) {
+                for (Lop lop : classData) {
+                    if (lop.getMaLop().equals(preselectedClass.getMaLop())) {
+                        comboLop.getSelectionModel().select(lop);
+                        break;
+                    }
+                }
+            }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error loading students", e);
-            showError("Error loading students");
+            Logger.getLogger(AddStudentDialogController.class.getName())
+                  .log(Level.SEVERE, "Error loading class data", e);
+            showAlert(AlertType.ERROR, "Database Error", "Could not load class data.");
         }
     }
-
-    public void setData(Lop lop, Runnable callback) {
-        this.selectedClass = lop;
-        this.onStudentsAdded = callback;
-        classInfoLabel.setText("Adding students to class: " + lop.getTenLop());
+    
+    private void loadStudentData() {
+        try {
+            studentData.clear();
+            studentData.addAll(sinhVienDAO.findAll());
+        } catch (SQLException e) {
+            Logger.getLogger(AddStudentDialogController.class.getName())
+                  .log(Level.SEVERE, "Error loading student data", e);
+            showAlert(AlertType.ERROR, "Database Error", "Could not load student data.");
+        }
     }
-
-    @FXML
-    private void handleAddSelected() {
-        ObservableList<SinhVien> selectedStudents = studentTable.getSelectionModel().getSelectedItems();
-        
-        if (selectedStudents.isEmpty()) {
-            showError("Please select students to add");
+    
+    private void setupButtons() {
+        btnAdd.setOnAction(e -> handleAddStudent());
+        btnCancel.setOnAction(e -> closeDialog());
+        btnAssign.setOnAction(e -> handleAssignToClass());
+        btnRemove.setOnAction(e -> handleRemoveFromClass());
+    }
+    
+    private void handleAddStudent() {
+        // Validate input
+        if (txtMaSV.getText().isEmpty() || txtHo.getText().isEmpty() || 
+            txtTen.getText().isEmpty() || datePicker.getValue() == null) {
+            showAlert(AlertType.WARNING, "Validation Error", 
+                     "Please fill in all required fields (ID, Last Name, First Name, Birth Date).");
             return;
         }
-
+        
         try {
-            for (SinhVien student : selectedStudents) {
-                sinhVienDAO.assignToClass(student.getMaSV(), selectedClass.getMaLop());
+            // Check if student ID already exists
+            if (sinhVienDAO.exists(txtMaSV.getText().trim())) {
+                showAlert(AlertType.WARNING, "Duplicate ID", "A student with this ID already exists.");
+                return;
             }
             
-            if (onStudentsAdded != null) {
-                onStudentsAdded.run();
+            // Create and save new student
+            SinhVien sinhVien = new SinhVien();
+            sinhVien.setMaSV(txtMaSV.getText().trim());
+            sinhVien.setHo(txtHo.getText().trim());
+            sinhVien.setTen(txtTen.getText().trim());
+            
+            // Convert LocalDate to Date
+            LocalDate localDate = datePicker.getValue();
+            if (localDate != null) {
+                Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+                sinhVien.setNgaySinh(date);
             }
             
-            closeDialog();
+            sinhVien.setDiaChi(txtDiaChi.getText().trim());
+            
+            if (comboLop.getValue() != null) {
+                sinhVien.setMaLop(comboLop.getValue().getMaLop());
+            }
+            
+            sinhVienDAO.insert(sinhVien);
+            
+            // Refresh student data and clear form
+            loadStudentData();
+            clearForm();
+            showAlert(AlertType.INFORMATION, "Success", "Student added successfully.");
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error adding students to class", e);
-            showError("Error adding students to class");
+            Logger.getLogger(AddStudentDialogController.class.getName())
+                  .log(Level.SEVERE, "Error adding student", e);
+            showAlert(AlertType.ERROR, "Database Error", "Could not add student: " + e.getMessage());
         }
     }
-
-    @FXML
-    private void handleCancel() {
-        closeDialog();
+    
+    private void handleAssignToClass() {
+        SinhVien selectedStudent = tblStudents.getSelectionModel().getSelectedItem();
+        Lop selectedClass = comboLop.getValue();
+        
+        if (selectedStudent == null) {
+            showAlert(AlertType.WARNING, "Selection Error", "Please select a student to assign.");
+            return;
+        }
+        
+        if (selectedClass == null) {
+            showAlert(AlertType.WARNING, "Selection Error", "Please select a class to assign to.");
+            return;
+        }
+        
+        try {
+            sinhVienDAO.assignToClass(selectedStudent.getMaSV(), selectedClass.getMaLop());
+            loadStudentData(); // Refresh data
+            showAlert(AlertType.INFORMATION, "Success", 
+                    "Student " + selectedStudent.getHoTen() + " assigned to class " + selectedClass.getTenLop());
+        } catch (SQLException e) {
+            Logger.getLogger(AddStudentDialogController.class.getName())
+                  .log(Level.SEVERE, "Error assigning student to class", e);
+            showAlert(AlertType.ERROR, "Database Error", "Could not assign student to class: " + e.getMessage());
+        }
     }
-
+    
+    private void handleRemoveFromClass() {
+        SinhVien selectedStudent = tblStudents.getSelectionModel().getSelectedItem();
+        
+        if (selectedStudent == null) {
+            showAlert(AlertType.WARNING, "Selection Error", "Please select a student to remove from class.");
+            return;
+        }
+        
+        try {
+            sinhVienDAO.removeFromClass(selectedStudent.getMaSV());
+            loadStudentData(); // Refresh data
+            showAlert(AlertType.INFORMATION, "Success", 
+                    "Student " + selectedStudent.getHoTen() + " removed from class");
+        } catch (SQLException e) {
+            Logger.getLogger(AddStudentDialogController.class.getName())
+                  .log(Level.SEVERE, "Error removing student from class", e);
+            showAlert(AlertType.ERROR, "Database Error", "Could not remove student from class: " + e.getMessage());
+        }
+    }
+    
+    private void clearForm() {
+        txtMaSV.clear();
+        txtHo.clear();
+        txtTen.clear();
+        datePicker.setValue(null);
+        txtDiaChi.clear();
+        comboLop.getSelectionModel().clearSelection();
+    }
+    
     private void closeDialog() {
-        ((Stage) studentTable.getScene().getWindow()).close();
+        if (onCloseCallback != null) {
+            onCloseCallback.run();
+        }
+        Stage stage = (Stage) btnCancel.getScene().getWindow();
+        stage.close();
     }
-
-    private void showError(String message) {
-        messageLabel.setText(message);
-        messageLabel.setStyle("-fx-text-fill: red;");
+    
+    private void showAlert(AlertType alertType, String title, String content) {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

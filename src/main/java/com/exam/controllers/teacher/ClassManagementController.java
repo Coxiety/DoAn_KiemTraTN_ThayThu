@@ -1,359 +1,326 @@
 package com.exam.controllers.teacher;
 
 import java.io.IOException;
+import java.net.URL;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.exam.controllers.BaseTeacherController;
+import com.exam.models.Lop;
+import com.exam.models.SinhVien;
 import com.exam.dao.LopDAO;
 import com.exam.dao.SinhVienDAO;
 import com.exam.dao.impl.LopDAOImpl;
 import com.exam.dao.impl.SinhVienDAOImpl;
-import com.exam.models.Lop;
-import com.exam.models.SinhVien;
 
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 
-public class ClassManagementController extends BaseTeacherController {
-    private static final Logger LOGGER = Logger.getLogger(ClassManagementController.class.getName());
+/**
+ * Controller for the class management view
+ */
+public class ClassManagementController implements Initializable {
+    
+    @FXML private TextField txtMaLop;
+    @FXML private TextField txtTenLop;
+    @FXML private Button btnAdd;
+    @FXML private Button btnUpdate;
+    @FXML private Button btnDelete;
+    @FXML private Button btnClear;
+    @FXML private TableView<Lop> tblClasses;
+    @FXML private TableColumn<Lop, String> colMaLop;
+    @FXML private TableColumn<Lop, String> colTenLop;
+    @FXML private TableColumn<Lop, Void> colStudents;
+    @FXML private TableView<SinhVien> tblStudents;
+    @FXML private TableColumn<SinhVien, String> colMaSV;
+    @FXML private TableColumn<SinhVien, String> colHo;
+    @FXML private TableColumn<SinhVien, String> colTen;
+    @FXML private Button btnAddStudent;
+    @FXML private Button btnRemoveStudent;
     
     private final LopDAO lopDAO = new LopDAOImpl();
     private final SinhVienDAO sinhVienDAO = new SinhVienDAOImpl();
-    private final ObservableList<Lop> classList = FXCollections.observableArrayList();
-    private final ObservableList<SinhVien> studentList = FXCollections.observableArrayList();
-    private Lop selectedClass;
-
-    @FXML private TableView<Lop> classTable;
-    @FXML private TableColumn<Lop, String> codeColumn;
-    @FXML private TableColumn<Lop, String> nameColumn;
-    @FXML private TableColumn<Lop, Integer> studentsColumn;
-    @FXML private TableColumn<Lop, Void> actionsColumn;
-
-    @FXML private TableView<SinhVien> studentTable;
-    @FXML private TableColumn<SinhVien, String> studentIdColumn;
-    @FXML private TableColumn<SinhVien, String> studentNameColumn;
-    @FXML private TableColumn<SinhVien, Void> studentActionsColumn;
-
-    @FXML private TextField searchField;
-    @FXML private TextField codeField;
-    @FXML private TextField nameField;
-    @FXML private VBox formSection;
-    @FXML private Label messageLabel;
-    @FXML private Label selectedClassLabel;
-    @FXML private Button addStudentButton;
-
+    private ObservableList<Lop> classData = FXCollections.observableArrayList();
+    private ObservableList<SinhVien> studentData = FXCollections.observableArrayList();
+    
     @Override
-    protected void initialize() {
-        configureTableColumns();
-        configureSearchField();
-        configureTableSelection();
+    public void initialize(URL location, ResourceBundle resources) {
+        setupClassTable();
+        setupStudentTable();
+        setupButtons();
         loadClassData();
-        hideForm();
     }
-
-    private void configureTableColumns() {
-        // Configure class table
-        codeColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getMaLop()));
-        nameColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getTenLop()));
-        studentsColumn.setCellValueFactory(data -> {
-            try {
-                int count = lopDAO.getStudentCount(data.getValue().getMaLop());
-                return new SimpleIntegerProperty(count).asObject();
-            } catch (SQLException e) {
-                LOGGER.log(Level.SEVERE, "Error getting student count", e);
-                return new SimpleIntegerProperty(0).asObject();
-            }
-        });
-
-        // Configure student table
-        studentIdColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getMaSV()));
-        studentNameColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getHoTen()));
+    
+    private void setupClassTable() {
+        colMaLop.setCellValueFactory(new PropertyValueFactory<>("maLop"));
+        colTenLop.setCellValueFactory(new PropertyValueFactory<>("tenLop"));
         
-        setupClassActionsColumn();
-        setupStudentActionsColumn();
-
-        classTable.setItems(classList);
-        studentTable.setItems(studentList);
-    }
-
-    private void setupClassActionsColumn() {
-        actionsColumn.setCellFactory(col -> new TableCell<>() {
-            private final Button editBtn = new Button("Edit");
-            private final Button deleteBtn = new Button("Delete");
-            private final HBox box = new HBox(5, editBtn, deleteBtn);
-
-            {
-                editBtn.setOnAction(e -> handleEdit(getTableRow().getItem()));
-                deleteBtn.setOnAction(e -> handleDelete(getTableRow().getItem()));
-            }
-
+        // Add action button column for viewing students
+        Callback<TableColumn<Lop, Void>, TableCell<Lop, Void>> cellFactory = new Callback<>() {
             @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : box);
+            public TableCell<Lop, Void> call(final TableColumn<Lop, Void> param) {
+                return new TableCell<>() {
+                    private final Button btn = new Button("View");
+                    
+                    {
+                        btn.setOnAction(event -> {
+                            Lop data = getTableView().getItems().get(getIndex());
+                            loadStudentsForClass(data);
+                        });
+                    }
+                    
+                    @Override
+                    public void updateItem(Void item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty) {
+                            setGraphic(null);
+                        } else {
+                            setGraphic(btn);
+                        }
+                    }
+                };
+            }
+        };
+        
+        colStudents.setCellFactory(cellFactory);
+        
+        tblClasses.setItems(classData);
+        
+        // Add selection listener
+        tblClasses.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            if (newSelection != null) {
+                displayClassDetails(newSelection);
+                loadStudentsForClass(newSelection);
             }
         });
     }
-
-    private void setupStudentActionsColumn() {
-        studentActionsColumn.setCellFactory(col -> new TableCell<>() {
-            private final Button removeBtn = new Button("Remove");
-
-            {
-                removeBtn.setOnAction(e -> handleRemoveStudent(getTableRow().getItem()));
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : removeBtn);
-            }
-        });
+    
+    private void setupStudentTable() {
+        colMaSV.setCellValueFactory(new PropertyValueFactory<>("maSV"));
+        colHo.setCellValueFactory(new PropertyValueFactory<>("ho"));
+        colTen.setCellValueFactory(new PropertyValueFactory<>("ten"));
+        tblStudents.setItems(studentData);
     }
-
-    private void configureSearchField() {
-        searchField.textProperty().addListener((obs, old, text) -> {
-            try {
-                if (text == null || text.isEmpty()) {
-                    loadClassData();
-                } else {
-                    classList.setAll(lopDAO.searchByName(text));
-                }
-            } catch (SQLException e) {
-                LOGGER.log(Level.SEVERE, "Error searching classes", e);
-                showError("Error searching classes");
-            }
-        });
+    
+    private void setupButtons() {
+        btnAdd.setOnAction(e -> handleAddClass());
+        btnUpdate.setOnAction(e -> handleUpdateClass());
+        btnDelete.setOnAction(e -> handleDeleteClass());
+        btnClear.setOnAction(e -> clearForm());
+        btnAddStudent.setOnAction(e -> handleAddStudent());
+        btnRemoveStudent.setOnAction(e -> handleRemoveStudent());
     }
-
-    private void configureTableSelection() {
-        classTable.getSelectionModel().selectedItemProperty().addListener((obs, old, lop) -> {
-            selectedClass = lop;
-            if (lop != null) {
-                selectedClassLabel.setText(lop.getTenLop());
-                addStudentButton.setDisable(false);
-                loadStudentsForClass(lop);
-            } else {
-                selectedClassLabel.setText("");
-                addStudentButton.setDisable(true);
-                studentList.clear();
-            }
-        });
-    }
-
-    private void loadStudentsForClass(Lop lop) {
-        studentList.clear();
-        if (lop == null) return;
-
-        try {
-            studentList.setAll(sinhVienDAO.findByClass(lop.getMaLop()));
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error loading students for class", e);
-            showError("Error loading students for class");
-        }
-    }
-
+    
     private void loadClassData() {
         try {
-            classList.setAll(lopDAO.findAll());
+            List<Lop> classes = lopDAO.findAll();
+            classData.clear();
+            classData.addAll(classes);
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error loading classes", e);
-            showError("Error loading classes");
+            Logger.getLogger(ClassManagementController.class.getName()).log(Level.SEVERE, "Error loading class data", e);
+            showAlert(AlertType.ERROR, "Database Error", "Could not load class data: " + e.getMessage());
         }
     }
-
-    @FXML
-    private void handleAddNew() {
-        selectedClass = null;
-        clearForm();
-        showForm();
-    }
-
-    @FXML
-    private void handleSave() {
-        if (!validateForm()) return;
-
+    
+    private void loadStudentsForClass(Lop selectedClass) {
         try {
-            Lop lop = new Lop(codeField.getText(), nameField.getText());
-            
-            if (selectedClass == null) {
-                if (lopDAO.existsByCode(lop.getMaLop())) {
-                    showError("Class code already exists");
-                    return;
-                }
-                lopDAO.insert(lop);
-                classList.add(lop);
-                showSuccess("Class added successfully");
-            } else {
-                lop.setMaLop(selectedClass.getMaLop());
-                lopDAO.update(lop);
-                loadClassData();
-                showSuccess("Class updated successfully");
-            }
-            hideForm();
+            List<SinhVien> students = sinhVienDAO.findByClass(selectedClass.getMaLop());
+            studentData.clear();
+            studentData.addAll(students);
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error saving class", e);
-            showError("Error saving class");
+            Logger.getLogger(ClassManagementController.class.getName()).log(Level.SEVERE, "Error loading student data", e);
+            showAlert(AlertType.ERROR, "Database Error", "Could not load student data: " + e.getMessage());
         }
     }
-
-    @FXML
-    private void handleCancel() {
-        hideForm();
+    
+    private void displayClassDetails(Lop lop) {
+        txtMaLop.setText(lop.getMaLop());
+        txtTenLop.setText(lop.getTenLop());
+        txtMaLop.setDisable(true); // Disable ID field when editing
     }
-
-    private void handleEdit(Lop lop) {
-        if (lop == null) return;
-        selectedClass = lop;
-        codeField.setText(lop.getMaLop());
-        nameField.setText(lop.getTenLop());
-        showForm();
+    
+    private void clearForm() {
+        txtMaLop.clear();
+        txtTenLop.clear();
+        txtMaLop.setDisable(false); // Enable ID field for new records
     }
-
-    private void handleDelete(Lop lop) {
-        if (lop == null) return;
-        
-        try {
-            if (lopDAO.getStudentCount(lop.getMaLop()) > 0) {
-                showError("Cannot delete class with students");
-                return;
-            }
-
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Confirm Delete");
-            alert.setHeaderText("Delete Class");
-            alert.setContentText("Delete class: " + lop.getTenLop() + "?");
-
-            if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-                lopDAO.delete(lop.getMaLop());
-                classList.remove(lop);
-                showSuccess("Class deleted successfully");
-            }
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error deleting class", e);
-            showError("Error deleting class");
-        }
-    }
-
-    @FXML
-    private void handleAddStudent() {
-        if (selectedClass == null) {
-            showError("Please select a class first");
+    
+    private void handleAddClass() {
+        if (!validateForm()) {
             return;
         }
-
+        
+        try {
+            // Check if class already exists
+            if (lopDAO.exists(txtMaLop.getText().trim())) {
+                showAlert(AlertType.WARNING, "Duplicate ID", "A class with this ID already exists.");
+                return;
+            }
+            
+            Lop lop = new Lop();
+            lop.setMaLop(txtMaLop.getText().trim());
+            lop.setTenLop(txtTenLop.getText().trim());
+            
+            lopDAO.insert(lop);
+            
+            loadClassData();
+            clearForm();
+            showAlert(AlertType.INFORMATION, "Success", "Class added successfully.");
+        } catch (SQLException e) {
+            Logger.getLogger(ClassManagementController.class.getName()).log(Level.SEVERE, "Error adding class", e);
+            showAlert(AlertType.ERROR, "Database Error", "Could not add class: " + e.getMessage());
+        }
+    }
+    
+    private void handleUpdateClass() {
+        if (txtMaLop.isDisabled() && !validateForm()) {
+            return;
+        }
+        
+        Lop selectedClass = tblClasses.getSelectionModel().getSelectedItem();
+        if (selectedClass == null) {
+            showAlert(AlertType.WARNING, "No Selection", "Please select a class to update.");
+            return;
+        }
+        
+        try {
+            selectedClass.setTenLop(txtTenLop.getText().trim());
+            lopDAO.update(selectedClass);
+            
+            loadClassData();
+            showAlert(AlertType.INFORMATION, "Success", "Class updated successfully.");
+        } catch (SQLException e) {
+            Logger.getLogger(ClassManagementController.class.getName()).log(Level.SEVERE, "Error updating class", e);
+            showAlert(AlertType.ERROR, "Database Error", "Could not update class: " + e.getMessage());
+        }
+    }
+    
+    private void handleDeleteClass() {
+        Lop selectedClass = tblClasses.getSelectionModel().getSelectedItem();
+        if (selectedClass == null) {
+            showAlert(AlertType.WARNING, "No Selection", "Please select a class to delete.");
+            return;
+        }
+        
+        try {
+            // Check if class has students
+            List<SinhVien> students = sinhVienDAO.findByClass(selectedClass.getMaLop());
+            if (!students.isEmpty()) {
+                showAlert(AlertType.WARNING, "Cannot Delete", 
+                        "This class has students assigned to it. Please remove all students first.");
+                return;
+            }
+            
+            lopDAO.delete(selectedClass.getMaLop());
+            
+            loadClassData();
+            clearForm();
+            showAlert(AlertType.INFORMATION, "Success", "Class deleted successfully.");
+        } catch (SQLException e) {
+            Logger.getLogger(ClassManagementController.class.getName()).log(Level.SEVERE, "Error deleting class", e);
+            showAlert(AlertType.ERROR, "Database Error", "Could not delete class: " + e.getMessage());
+        }
+    }
+    
+    private void handleAddStudent() {
+        Lop selectedClass = tblClasses.getSelectionModel().getSelectedItem();
+        if (selectedClass == null) {
+            showAlert(AlertType.WARNING, "No Selection", "Please select a class to add students to.");
+            return;
+        }
+        
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/teacher/add-student-dialog.fxml"));
             Parent root = loader.load();
-
+            
             AddStudentDialogController controller = loader.getController();
             controller.setData(selectedClass, () -> loadStudentsForClass(selectedClass));
-
-            Stage dialog = new Stage();
-            dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.initOwner(addStudentButton.getScene().getWindow());
-            dialog.setTitle("Add Students to Class");
-            dialog.setScene(new Scene(root));
-            dialog.showAndWait();
-
+            
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Add Student to Class " + selectedClass.getTenLop());
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(tblClasses.getScene().getWindow());
+            Scene scene = new Scene(root);
+            dialogStage.setScene(scene);
+            
+            // Show the dialog and wait for it to close
+            dialogStage.showAndWait();
+            
+            // Reload students after dialog closes
+            loadStudentsForClass(selectedClass);
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Error opening add student dialog", e);
-            showError("Error opening add student dialog");
+            Logger.getLogger(ClassManagementController.class.getName()).log(Level.SEVERE, "Error loading add student dialog", e);
+            showAlert(AlertType.ERROR, "Error", "Could not load add student dialog: " + e.getMessage());
         }
     }
-
-    private void handleRemoveStudent(SinhVien student) {
-        if (selectedClass == null || student == null) return;
+    
+    private void handleRemoveStudent() {
+        Lop selectedClass = tblClasses.getSelectionModel().getSelectedItem();
+        SinhVien selectedStudent = tblStudents.getSelectionModel().getSelectedItem();
         
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirm Remove");
-        alert.setHeaderText("Remove Student");
-        alert.setContentText("Remove " + student.getHoTen() + " from " + selectedClass.getTenLop() + "?");
-
-        if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-            try {
-                sinhVienDAO.removeFromClass(student.getMaSV());
-                studentList.remove(student);
-                showSuccess("Student removed successfully");
-            } catch (SQLException e) {
-                LOGGER.log(Level.SEVERE, "Error removing student from class", e);
-                showError("Error removing student from class");
-            }
+        if (selectedClass == null || selectedStudent == null) {
+            showAlert(AlertType.WARNING, "No Selection", "Please select a class and a student to remove.");
+            return;
+        }
+        
+        try {
+            sinhVienDAO.removeFromClass(selectedStudent.getMaSV());
+            loadStudentsForClass(selectedClass);
+            showAlert(AlertType.INFORMATION, "Success", "Student removed from class successfully.");
+        } catch (SQLException e) {
+            Logger.getLogger(ClassManagementController.class.getName()).log(Level.SEVERE, "Error removing student from class", e);
+            showAlert(AlertType.ERROR, "Database Error", "Could not remove student from class: " + e.getMessage());
         }
     }
-
+    
     private boolean validateForm() {
-        String code = codeField.getText();
-        String name = nameField.getText();
-
-        if (code == null || code.trim().isEmpty()) {
-            showError("Class code is required");
+        if (txtMaLop.getText().trim().isEmpty()) {
+            showAlert(AlertType.WARNING, "Validation Error", "Please enter a class ID.");
             return false;
         }
-
-        if (name == null || name.trim().isEmpty()) {
-            showError("Class name is required");
+        
+        if (txtTenLop.getText().trim().isEmpty()) {
+            showAlert(AlertType.WARNING, "Validation Error", "Please enter a class name.");
             return false;
         }
-
-        if (code.length() > 8) {
-            showError("Class code must not exceed 8 characters");
+        
+        // Check length restrictions
+        if (txtMaLop.getText().trim().length() > 8) {
+            showAlert(AlertType.WARNING, "Validation Error", "Class ID must not exceed 8 characters.");
             return false;
         }
-
-        if (name.length() > 40) {
-            showError("Class name must not exceed 40 characters");
+        
+        if (txtTenLop.getText().trim().length() > 40) {
+            showAlert(AlertType.WARNING, "Validation Error", "Class name must not exceed 40 characters.");
             return false;
         }
-
+        
         return true;
     }
-
-    private void showForm() {
-        formSection.setVisible(true);
-        codeField.setDisable(selectedClass != null);
-    }
-
-    private void hideForm() {
-        formSection.setVisible(false);
-        clearForm();
-        selectedClass = null;
-    }
-
-    private void clearForm() {
-        codeField.clear();
-        nameField.clear();
-        codeField.setDisable(false);
-        messageLabel.setText("");
-    }
-
-    private void showError(String message) {
-        messageLabel.setText(message);
-        messageLabel.setStyle("-fx-text-fill: red;");
-    }
-
-    private void showSuccess(String message) {
-        messageLabel.setText(message);
-        messageLabel.setStyle("-fx-text-fill: green;");
+    
+    private void showAlert(AlertType alertType, String title, String content) {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

@@ -15,6 +15,7 @@ The project follows a standard JavaFX application structure:
 - `src/main/java/com/exam/utils`: Contains utility classes
 - `src/main/resources/fxml`: Contains FXML files for UI
 - `src/main/resources/css`: Contains CSS files for styling
+- `src/main/resources/db`: Contains database scripts
 
 ## Features
 
@@ -46,15 +47,16 @@ The application is built using:
 
 ## Database Structure
 
-The database consists of several interconnected tables:
+The database THI_TRAC_NGHIEM consists of several interconnected tables:
 
-- `GiaoVien`: Stores teacher information
-- `SinhVien`: Stores student information
-- `Lop`: Stores class information
-- `MonHoc`: Stores subject information
-- `GiaoVien_DangKy`: Maps teachers to subjects they teach
-- `BoDe`: Stores questions and answers
-- `BangDiem`: Stores exam results
+- `LOP`: Class information
+- `MONHOC`: Subject information
+- `SINHVIEN`: Student information
+- `GIAOVIEN`: Teacher information
+- `GIAOVIEN_DANGKY`: Teacher-subject-class registration mapping
+- `BODE`: Contains exam questions
+- `BANGDIEM`: Stores exam results
+- `USERS`: User authentication information (added for application functionality)
 
 ## Getting Started
 
@@ -66,17 +68,94 @@ The database consists of several interconnected tables:
 
 ### Setup
 
-1. Clone the repository
-2. Create a SQL Server database and execute the schema.sql script
-3. Update database connection parameters in DatabaseConfig.java
-4. Build the project using Maven:
+1. **Clone the repository**
+
+2. **Set up the database**
+   - Create a new database in SQL Server named `THI_TRAC_NGHIEM`
+   - Execute the schema script:
+     ```
+     src/main/resources/db/schema.sql
+     ```
+   - Load sample data:
+     ```
+     src/main/resources/db/sample-data.sql
+     ```
+
+3. **Configure database connection**
+   - Open `src/main/java/com/exam/utils/DatabaseConfig.java`
+   - Update the connection string, username, and password to match your SQL Server configuration:
+     ```java
+     private static final String DB_URL = "jdbc:sqlserver://localhost;databaseName=THI_TRAC_NGHIEM;encrypt=false";
+     private static final String USER = "your_username";
+     private static final String PASSWORD = "your_password";
+     ```
+
+4. **Build the project**
    ```
    mvn clean package
    ```
-5. Run the application:
+
+5. **Run the application**
    ```
    java -jar target/exam-system.jar
    ```
+   or run the `Main.java` class directly from your IDE.
+
+### Login Credentials (When using sample data)
+
+#### PGV (Coordinator) Account
+- Username: admin
+- Password: password
+
+#### Teacher Accounts
+- Username: teacher1, teacher2, teacher3
+- Password: password
+
+#### Student Account
+- Username: student
+- Password: password
+
+## Exam Rules and Implementation
+
+- **Question Selection**: Random questions are selected based on levels (A, B, C) without duplication. Higher-level exams can include up to 30% lower-level questions if at least 70% are high-level.
+- **Scoring**: Each exam has a maximum score of 10, with points distributed equally among all questions.
+- **Time Limit**: Exams have configurable time limits (5-60 minutes). When time expires, the exam automatically ends.
+- **Results**: Scores are displayed immediately and recorded in the BANGDIEM table.
+- **Reports**: Teachers can view and print exam results and subject scoreboards for their classes.
+
+## User Roles
+
+1. **PGV (Coordinator)**:
+   - Full system access
+   - Can create PGV and Teacher accounts
+   - Full access to all management features
+
+2. **Teacher**:
+   - Can update their own exam questions
+   - Can conduct practice tests
+   - Can review student exam papers
+   - Can print subject scoreboards
+
+3. **Student**:
+   - Can take exams
+   - Can review their own exam history
+
+## Troubleshooting Database Issues
+
+If you encounter issues with the sample data SQL script:
+
+1. **Foreign Key Constraint Errors**:
+   - Make sure to run the schema script completely before running the sample data script
+   - Check that all referenced entities exist before inserting records that reference them
+
+2. **Column Size Limitations**:
+   - All string data in the sample data script has been sized appropriately for the schema
+   - If you add custom data, ensure it respects the column size limits
+
+3. **Database Connection Issues**:
+   - Verify SQL Server is running and accessible
+   - Check that your SQL Server authentication settings are correct in DatabaseConfig.java
+   - Ensure the database name matches exactly: THI_TRAC_NGHIEM
 
 ## Developer Documentation
 

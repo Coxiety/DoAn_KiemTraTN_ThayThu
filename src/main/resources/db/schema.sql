@@ -1,56 +1,48 @@
+-- Database schema for Multiple Choice Exam System
+
 -- Create database
-CREATE DATABASE THI_TRAC_NGHIEM
+CREATE DATABASE THI_TRAC_NGHIEM;
 GO
 
-USE THI_TRAC_NGHIEM
+USE THI_TRAC_NGHIEM;
 GO
 
--- Create Users table for authentication
-CREATE TABLE Users (
-    UserID NCHAR(8) PRIMARY KEY,
-    Login NVARCHAR(50) NOT NULL UNIQUE,
-    Password NVARCHAR(64) NOT NULL,  -- For SHA-256 hash
-    Role NVARCHAR(10) NOT NULL CHECK (Role IN ('TEACHER', 'STUDENT'))
-);
-
--- Create Lop table
-CREATE TABLE Lop (
+-- Create tables
+CREATE TABLE LOP (
     MALOP NCHAR(8) PRIMARY KEY,
     TENLOP NVARCHAR(40) UNIQUE NOT NULL
 );
+GO
 
--- Create Monhoc table
-CREATE TABLE Monhoc (
+CREATE TABLE MONHOC (
     MAMH NCHAR(5) PRIMARY KEY,
     TENMH NVARCHAR(40) UNIQUE NOT NULL
 );
+GO
 
--- Create Giaovien table
-CREATE TABLE Giaovien (
-    MAGV NCHAR(8) PRIMARY KEY,
-    HO NVARCHAR(40),
-    TEN NVARCHAR(10),
-    SODTLL NCHAR(15),
-    DIACHI NVARCHAR(50),
-    CONSTRAINT FK_Giaovien_Users FOREIGN KEY (MAGV) REFERENCES Users(UserID)
-);
-
--- Create Sinhvien table
-CREATE TABLE Sinhvien (
+CREATE TABLE SINHVIEN (
     MASV NCHAR(8) PRIMARY KEY,
     HO NVARCHAR(40),
     TEN NVARCHAR(10),
     NGAYSINH DATE,
     DIACHI NVARCHAR(100),
-    MALOP NCHAR(8) FOREIGN KEY REFERENCES Lop(MALOP),
-    CONSTRAINT FK_Sinhvien_Users FOREIGN KEY (MASV) REFERENCES Users(UserID)
+    MALOP NCHAR(8) FOREIGN KEY REFERENCES LOP(MALOP)
 );
+GO
 
--- Create Giaovien_Dangky table
-CREATE TABLE Giaovien_Dangky (
-    MAGV NCHAR(8) FOREIGN KEY REFERENCES Giaovien(MAGV),
-    MALOP NCHAR(8) FOREIGN KEY REFERENCES Lop(MALOP),
-    MAMH NCHAR(5) FOREIGN KEY REFERENCES Monhoc(MAMH),
+CREATE TABLE GIAOVIEN (
+    MAGV NCHAR(8) PRIMARY KEY,
+    HO NVARCHAR(40),
+    TEN NVARCHAR(10),
+    SODTLL NCHAR(15),
+    DIACHI NVARCHAR(50)
+);
+GO
+
+CREATE TABLE GIAOVIEN_DANGKY (
+    MAGV NCHAR(8) FOREIGN KEY REFERENCES GIAOVIEN(MAGV),
+    MALOP NCHAR(8) FOREIGN KEY REFERENCES LOP(MALOP),
+    MAMH NCHAR(5) FOREIGN KEY REFERENCES MONHOC(MAMH),
     TRINHDO NCHAR(1) CHECK (TRINHDO IN ('A', 'B', 'C')),
     NGAYTHI DATETIME DEFAULT GETDATE(),
     LAN SMALLINT CHECK (LAN >= 1 AND LAN <= 2),
@@ -58,43 +50,82 @@ CREATE TABLE Giaovien_Dangky (
     THOIGIAN SMALLINT CHECK (THOIGIAN >= 5 AND THOIGIAN <= 60),
     PRIMARY KEY (MALOP, MAMH, LAN)
 );
+GO
 
--- Create BODE table
 CREATE TABLE BODE (
-    MAMH NCHAR(5) FOREIGN KEY REFERENCES Monhoc(MAMH),
     CAUHOI INT IDENTITY(1,1) PRIMARY KEY,
-    TRINHDO CHAR(1) CHECK (TRINHDO IN ('A', 'B', 'C')),
+    MAMH NCHAR(5) FOREIGN KEY REFERENCES MONHOC(MAMH),
+    TRINHDO NCHAR(1) CHECK (TRINHDO IN ('A', 'B', 'C')),
     NOIDUNG NVARCHAR(200),
     A NVARCHAR(50),
     B NVARCHAR(50),
     C NVARCHAR(50),
     D NVARCHAR(50),
     DAP_AN NCHAR(1) CHECK (DAP_AN IN ('A', 'B', 'C', 'D')),
-    MAGV NCHAR(8) FOREIGN KEY REFERENCES Giaovien(MAGV)
+    MAGV NCHAR(8) FOREIGN KEY REFERENCES GIAOVIEN(MAGV)
 );
+GO
 
--- Create BangDiem table
-CREATE TABLE BangDiem (
-    MASV NCHAR(8) FOREIGN KEY REFERENCES Sinhvien(MASV),
-    MAMH NCHAR(5) FOREIGN KEY REFERENCES Monhoc(MAMH),
+CREATE TABLE BANGDIEM (
+    MASV NCHAR(8) FOREIGN KEY REFERENCES SINHVIEN(MASV),
+    MAMH NCHAR(5) FOREIGN KEY REFERENCES MONHOC(MAMH),
     LAN SMALLINT CHECK (LAN >= 1 AND LAN <= 2),
     NGAYTHI DATE DEFAULT GETDATE(),
     DIEM FLOAT CHECK (DIEM >= 0 AND DIEM <= 10),
     PRIMARY KEY (MASV, MAMH, LAN)
 );
+GO
 
--- Add indexes for better performance
-CREATE INDEX IX_Users_Login ON Users(Login);
-CREATE INDEX IX_Sinhvien_Malop ON Sinhvien(MALOP);
-CREATE INDEX IX_GiaovienDangky_MagvMalop ON Giaovien_Dangky(MAGV, MALOP);
-CREATE INDEX IX_Bode_MamhMagv ON BODE(MAMH, MAGV);
-CREATE INDEX IX_Bangdiem_MasvMamh ON BangDiem(MASV, MAMH);
+-- User authentication table (added for application functionality)
+CREATE TABLE USERS (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    USERNAME NVARCHAR(50) NOT NULL UNIQUE,
+    PASSWORD NVARCHAR(100) NOT NULL,
+    ROLE NVARCHAR(20) NOT NULL CHECK (ROLE IN ('PGV', 'GIANGVIEN', 'SINHVIEN')),
+    MAGV NCHAR(8) REFERENCES GIAOVIEN(MAGV),
+    MASV NCHAR(8) REFERENCES SINHVIEN(MASV)
+);
+GO
 
--- Add cascading delete constraints where appropriate
-ALTER TABLE Giaovien_Dangky 
-ADD CONSTRAINT FK_GVDangky_Giaovien 
-FOREIGN KEY (MAGV) REFERENCES Giaovien(MAGV) ON DELETE CASCADE;
+-- Create stored procedure for random question selection
+CREATE PROCEDURE SP_GetRandomQuestions
+    @MaMH NCHAR(5),
+    @TrinhDo NCHAR(1),
+    @SoCauThi INT,
+    @IncludeLowerLevel BIT = 0
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    DECLARE @MinCauHoi INT, @MaxCauHoi INT;
+    DECLARE @NumHighLevel INT = CEILING(@SoCauThi * 0.7);
+    DECLARE @NumLowerLevel INT = @SoCauThi - @NumHighLevel;
+    DECLARE @LowerLevel NCHAR(1);
+    
+    -- Set lower level based on current level
+    IF @TrinhDo = 'A' SET @LowerLevel = 'B';
+    ELSE IF @TrinhDo = 'B' SET @LowerLevel = 'C';
+    ELSE SET @LowerLevel = 'C'; -- No lower level for C
+    
+    -- Get high-level questions
+    SELECT TOP (@NumHighLevel) *
+    FROM BODE
+    WHERE MAMH = @MaMH AND TRINHDO = @TrinhDo
+    ORDER BY NEWID();
+    
+    -- Get lower-level questions if specified and available
+    IF @IncludeLowerLevel = 1
+    BEGIN
+        SELECT TOP (@NumLowerLevel) *
+        FROM BODE
+        WHERE MAMH = @MaMH AND TRINHDO = @LowerLevel
+        ORDER BY NEWID();
+    END
+END;
+GO
 
-ALTER TABLE BODE 
-ADD CONSTRAINT FK_BoDe_Giaovien 
-FOREIGN KEY (MAGV) REFERENCES Giaovien(MAGV) ON DELETE CASCADE;
+-- Create indexes for improved performance
+CREATE INDEX IDX_BODE_MAMH_TRINHDO ON BODE(MAMH, TRINHDO);
+CREATE INDEX IDX_BANGDIEM_MASV ON BANGDIEM(MASV, MAMH);
+CREATE INDEX IDX_SINHVIEN_MALOP ON SINHVIEN(MALOP);
+GO

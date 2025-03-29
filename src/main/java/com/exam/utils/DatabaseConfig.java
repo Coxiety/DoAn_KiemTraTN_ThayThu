@@ -6,62 +6,69 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Database configuration and connection provider class
+ */
 public class DatabaseConfig {
     private static final Logger LOGGER = Logger.getLogger(DatabaseConfig.class.getName());
     
-    // Database configuration
-    private static final String DRIVER = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
-    private static final String DATABASE = "THI_TRAC_NGHIEM";
-    private static final String HOST = "localhost";
-    private static final String PORT = "1433";
-    private static final String USERNAME = "admin";
-    private static final String PASSWORD = "admin";
-    
-    private static final String CONNECTION_URL = String.format(
-        "jdbc:sqlserver://%s:%s;databaseName=%s;encrypt=true;trustServerCertificate=true",
-        HOST, PORT, DATABASE
-    );
+    // Database connection parameters - update these to match your environment
+    private static final String DB_URL = "jdbc:sqlserver://localhost;databaseName=THI_TRAC_NGHIEM;encrypt=false";
+    private static final String USER = "sa"; // Replace with your actual SQL Server username
+    private static final String PASSWORD = "Password.1"; // Replace with your actual SQL Server password
 
     static {
         try {
-            Class.forName(DRIVER);
+            // Load the JDBC driver
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            LOGGER.info("SQL Server JDBC driver loaded successfully");
         } catch (ClassNotFoundException e) {
-            LOGGER.log(Level.SEVERE, "SQL Server JDBC Driver not found", e);
-            throw new RuntimeException("SQL Server JDBC Driver not found", e);
+            LOGGER.log(Level.SEVERE, "SQL Server JDBC driver not found", e);
         }
     }
 
+    /**
+     * Get a database connection
+     * @return Connection to the database
+     * @throws SQLException if a database access error occurs
+     */
     public static Connection getConnection() throws SQLException {
         try {
-            Connection connection = DriverManager.getConnection(CONNECTION_URL, USERNAME, PASSWORD);
-            if (connection != null) {
-                LOGGER.info("Successfully connected to the database");
-            }
-            return connection;
+            Connection conn = DriverManager.getConnection(DB_URL, USER, PASSWORD);
+            LOGGER.fine("Database connection established");
+            return conn;
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Connection Failed!", e);
+            LOGGER.log(Level.SEVERE, "Failed to establish database connection", e);
             throw e;
         }
     }
 
-    public static void closeConnection(Connection connection) {
-        if (connection != null) {
-            try {
-                connection.close();
-                LOGGER.info("Database Connection closed");
-            } catch (SQLException e) {
-                LOGGER.log(Level.WARNING, "Error closing database connection", e);
-            }
-        }
-    }
-
-    // Test database connection
+    /**
+     * Test the database connection
+     * @return true if connection is successful, false otherwise
+     */
     public static boolean testConnection() {
-        try (Connection connection = getConnection()) {
-            return connection != null && !connection.isClosed();
+        try (Connection conn = getConnection()) {
+            return conn != null && !conn.isClosed();
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Database connection test failed", e);
             return false;
         }
+    }
+
+    /**
+     * Get the current database URL
+     * @return database URL
+     */
+    public static String getDbUrl() {
+        return DB_URL;
+    }
+
+    /**
+     * Get the current database user
+     * @return database user
+     */
+    public static String getUser() {
+        return USER;
     }
 }

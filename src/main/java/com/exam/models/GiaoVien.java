@@ -1,87 +1,121 @@
 package com.exam.models;
 
-import java.util.HashSet;
-import java.util.Set;
-
+/**
+ * Model class for GiaoVien entity
+ * Represents a teacher in the system
+ */
 public class GiaoVien {
     private String maGV;
     private String ho;
     private String ten;
-    private String soDTLL;  // Số điện thoại liên lạc
+    private String soDTLL; // Phone number field
     private String diaChi;
-    private Set<BoDe> boDes;
-    private Set<GiaoVienDangKy> giaoVienDangKys;
-
+    
+    /**
+     * Default constructor
+     */
     public GiaoVien() {
-        this.boDes = new HashSet<>();
-        this.giaoVienDangKys = new HashSet<>();
     }
-
-    public GiaoVien(String maGV, String ho, String ten) {
-        this();
+    
+    /**
+     * Constructor with fields
+     */
+    public GiaoVien(String maGV, String ho, String ten, String soDTLL, String diaChi) {
         this.maGV = maGV;
         this.ho = ho;
         this.ten = ten;
+        this.soDTLL = soDTLL;
+        this.diaChi = diaChi;
     }
-
-    // Getters and Setters
+    
+    /**
+     * Get teacher ID
+     * @return teacher ID
+     */
     public String getMaGV() {
         return maGV;
     }
-
+    
+    /**
+     * Set teacher ID
+     * @param maGV teacher ID
+     */
     public void setMaGV(String maGV) {
-        this.maGV = maGV != null ? maGV.trim().toUpperCase() : null;
+        this.maGV = maGV;
     }
-
+    
+    /**
+     * Get teacher's last name
+     * @return last name
+     */
     public String getHo() {
         return ho;
     }
-
+    
+    /**
+     * Set teacher's last name
+     * @param ho last name
+     */
     public void setHo(String ho) {
         this.ho = ho;
     }
-
+    
+    /**
+     * Get teacher's first name
+     * @return first name
+     */
     public String getTen() {
         return ten;
     }
-
+    
+    /**
+     * Set teacher's first name
+     * @param ten first name
+     */
     public void setTen(String ten) {
         this.ten = ten;
     }
-
+    
+    /**
+     * Get teacher's full name
+     * @return full name
+     */
+    public String getHoTen() {
+        return ho + " " + ten;
+    }
+    
+    /**
+     * Get teacher's phone number
+     * @return phone number
+     */
     public String getSoDTLL() {
         return soDTLL;
     }
-
+    
+    /**
+     * Set teacher's phone number
+     * @param soDTLL phone number
+     */
     public void setSoDTLL(String soDTLL) {
         this.soDTLL = soDTLL;
     }
-
+    
+    /**
+     * Get teacher's address
+     * @return address
+     */
     public String getDiaChi() {
         return diaChi;
     }
-
+    
+    /**
+     * Set teacher's address
+     * @param diaChi address
+     */
     public void setDiaChi(String diaChi) {
         this.diaChi = diaChi;
     }
-
-    public String getHoTen() {
-        return (ho != null ? ho : "") + " " + (ten != null ? ten : "");
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        GiaoVien giaoVien = (GiaoVien) o;
-        return maGV != null && maGV.equals(giaoVien.maGV);
-    }
-
-    @Override
-    public int hashCode() {
-        return maGV != null ? maGV.hashCode() : 0;
-    }
-
+    
     @Override
     public String toString() {
         return "GiaoVien{" +
