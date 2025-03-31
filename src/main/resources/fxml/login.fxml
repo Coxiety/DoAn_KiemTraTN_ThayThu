@@ -28,7 +28,7 @@
         </GridPane>
 
         <HBox spacing="10" alignment="CENTER">
-            <Button text="Login" onAction="#handleLogin"/>
+            <Button fx:id="loginButton" text="Login" onAction="#handleLogin"/>
             <Button text="Register" onAction="#handleRegister"/>
         </HBox>
 

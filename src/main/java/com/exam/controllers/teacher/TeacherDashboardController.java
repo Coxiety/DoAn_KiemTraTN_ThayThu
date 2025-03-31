@@ -31,7 +31,7 @@ public class TeacherDashboardController extends BaseTeacherController {
 
     @FXML
     private void handleManageClasses() {
-        openWindow("/fxml/teacher/classes.fxml", "Manage Classes");
+        openWindowWithoutInit("/fxml/teacher/classes.fxml", "Manage Classes");
     }
 
     @FXML
@@ -79,6 +79,21 @@ public class TeacherDashboardController extends BaseTeacherController {
             
             BaseTeacherController controller = loader.getController();
             controller.initData(giaoVien);
+            
+            Stage stage = new Stage();
+            stage.setTitle(title);
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Error opening " + title + " window", e);
+        }
+    }
+    
+    // Method for controllers that don't extend BaseTeacherController
+    private void openWindowWithoutInit(String fxmlPath, String title) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
             
             Stage stage = new Stage();
             stage.setTitle(title);

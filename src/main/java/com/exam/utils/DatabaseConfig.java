@@ -14,8 +14,8 @@ public class DatabaseConfig {
     
     // Database connection parameters - update these to match your environment
     private static final String DB_URL = "jdbc:sqlserver://localhost;databaseName=THI_TRAC_NGHIEM;encrypt=false";
-    private static final String USER = "sa"; // Replace with your actual SQL Server username
-    private static final String PASSWORD = "Password.1"; // Replace with your actual SQL Server password
+    private static final String USER = "admin"; // Replace with your actual SQL Server username
+    private static final String PASSWORD = "admin"; // Replace with your actual SQL Server password
 
     static {
         try {

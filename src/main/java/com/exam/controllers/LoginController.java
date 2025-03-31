@@ -21,6 +21,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -39,9 +40,9 @@ public class LoginController {
     private final GiaoVienDAO giaoVienDAO = new GiaoVienDAOImpl();
     private final SinhVienDAO sinhVienDAO = new SinhVienDAOImpl();
     
-    @FXML private TextField usernameField;
+    @FXML private TextField loginField;
     @FXML private PasswordField passwordField;
-    @FXML private Label statusLabel;
+    @FXML private Label messageLabel;
     @FXML private Button loginButton;
     @FXML private ToggleGroup roleGroup;
     @FXML private RadioButton teacherRadio;
@@ -55,8 +56,20 @@ public class LoginController {
         // Test database connection on startup
         boolean connectionOk = DatabaseConfig.testConnection();
         if (!connectionOk) {
-            showError("Database connection failed. Please check your configuration.");
-            loginButton.setDisable(true);
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText(null);
+            alert.setContentText("Database connection failed. Please check your configuration.");
+            alert.showAndWait();
+            
+            if (loginButton != null) {
+                loginButton.setDisable(true);
+            }
+        }
+        
+        // Set default message
+        if (messageLabel != null) {
+            messageLabel.setText("Please log in");
         }
     }
     
@@ -65,11 +78,14 @@ public class LoginController {
      */
     @FXML
     private void handleLogin() {
-        String username = usernameField.getText();
+        String username = loginField.getText();
         String password = passwordField.getText();
         
         if (username.isEmpty() || password.isEmpty()) {
-            showStatus("Please enter username and password", true);
+            if (messageLabel != null) {
+                messageLabel.setText("Please enter username and password");
+                messageLabel.setStyle("-fx-text-fill: red;");
+            }
             return;
         }
         
@@ -78,13 +94,35 @@ public class LoginController {
             if (user != null) {
                 handleSuccessfulLogin(user);
             } else {
-                showStatus("Invalid username or password", true);
+                if (messageLabel != null) {
+                    messageLabel.setText("Invalid username or password");
+                    messageLabel.setStyle("-fx-text-fill: red;");
+                }
                 passwordField.clear();
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Database error during login", e);
-            showStatus("Database error occurred. Please try again.", true);
+            if (messageLabel != null) {
+                messageLabel.setText("Database error occurred. Please try again.");
+                messageLabel.setStyle("-fx-text-fill: red;");
+            }
         }
+    }
+    
+    /**
+     * Handle register button click
+     */
+    @FXML
+    private void handleRegister() {
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle("Registration");
+        alert.setHeaderText(null);
+        alert.setContentText("Registration functionality is not yet implemented.\n\n" +
+                "Use the following test accounts:\n" +
+                "Admin: admin/password\n" +
+                "Teacher: teacher1/password\n" +
+                "Student: student/password");
+        alert.showAndWait();
     }
     
     /**
@@ -93,7 +131,10 @@ public class LoginController {
      * @throws SQLException if database error occurs
      */
     private void handleSuccessfulLogin(User user) throws SQLException {
-        showStatus("Login successful!", false);
+        if (messageLabel != null) {
+            messageLabel.setText("Login successful!");
+            messageLabel.setStyle("-fx-text-fill: green;");
+        }
         
         switch (user.getRole()) {
             case PGV:
@@ -106,7 +147,10 @@ public class LoginController {
                 break;
                 
             default:
-                showStatus("Invalid user role.", true);
+                if (messageLabel != null) {
+                    messageLabel.setText("Invalid user role.");
+                    messageLabel.setStyle("-fx-text-fill: red;");
+                }
                 break;
         }
     }
@@ -120,7 +164,10 @@ public class LoginController {
         // Get the teacher data
         GiaoVien giaoVien = giaoVienDAO.findById(user.getMaGV());
         if (giaoVien == null) {
-            showStatus("Teacher account not found.", true);
+            if (messageLabel != null) {
+                messageLabel.setText("Teacher account not found.");
+                messageLabel.setStyle("-fx-text-fill: red;");
+            }
             return;
         }
         
@@ -130,18 +177,24 @@ public class LoginController {
             
             // Pass the teacher data to the controller
             BaseTeacherController controller = loader.getController();
-            controller.initData(giaoVien);
+            if (controller != null) {
+                controller.initData(giaoVien);
+            }
             
             // Create and show the dashboard scene
-            Stage stage = (Stage) loginButton.getScene().getWindow();
-            Scene scene = new Scene(root);
-            stage.setTitle("Teacher Dashboard - " + giaoVien.getHoTen());
-            stage.setScene(scene);
-            stage.show();
-            
+            if (loginButton != null) {
+                Stage stage = (Stage) loginButton.getScene().getWindow();
+                Scene scene = new Scene(root);
+                stage.setTitle("Teacher Dashboard - " + giaoVien.getHoTen());
+                stage.setScene(scene);
+                stage.show();
+            }
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Error loading teacher dashboard", e);
-            showStatus("Error loading teacher dashboard.", true);
+            if (messageLabel != null) {
+                messageLabel.setText("Error loading teacher dashboard.");
+                messageLabel.setStyle("-fx-text-fill: red;");
+            }
         }
     }
     
@@ -151,45 +204,41 @@ public class LoginController {
      * @throws SQLException if database error occurs
      */
     private void loginAsStudent(User user) throws SQLException {
-        // For student login, we need to first select which student to log in as
-        // since the account is shared
+        // Get the student data using the maSV from the user account
+        SinhVien sinhVien = sinhVienDAO.findById(user.getMaSV());
+        if (sinhVien == null) {
+            if (messageLabel != null) {
+                messageLabel.setText("Student account not found.");
+                messageLabel.setStyle("-fx-text-fill: red;");
+            }
+            return;
+        }
+        
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/student/student-select.fxml"));
+            // Load the student dashboard directly
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/student/dashboard.fxml"));
             Parent root = loader.load();
             
-            Stage stage = (Stage) loginButton.getScene().getWindow();
-            Scene scene = new Scene(root);
-            stage.setTitle("Student Selection");
-            stage.setScene(scene);
-            stage.show();
+            // Pass the student data to the controller
+            StudentDashboardController controller = loader.getController();
+            if (controller != null) {
+                controller.initData(sinhVien);
+            }
             
+            // Create and show the dashboard scene
+            if (loginButton != null) {
+                Stage stage = (Stage) loginButton.getScene().getWindow();
+                Scene scene = new Scene(root);
+                stage.setTitle("Student Dashboard - " + sinhVien.getHoTen());
+                stage.setScene(scene);
+                stage.show();
+            }
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Error loading student selection", e);
-            showStatus("Error loading student selection screen.", true);
+            LOGGER.log(Level.SEVERE, "Error loading student dashboard", e);
+            if (messageLabel != null) {
+                messageLabel.setText("Error loading student dashboard.");
+                messageLabel.setStyle("-fx-text-fill: red;");
+            }
         }
-    }
-    
-    /**
-     * Show status message
-     * @param message status message
-     * @param isError true if error message, false otherwise
-     */
-    private void showStatus(String message, boolean isError) {
-        statusLabel.setText(message);
-        statusLabel.setStyle(isError
-                ? "-fx-text-fill: red;"
-                : "-fx-text-fill: green;");
-    }
-    
-    /**
-     * Show error dialog
-     * @param message error message
-     */
-    private void showError(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
     }
 }

@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
+import com.exam.controllers.BaseTeacherController;
 import com.exam.models.Lop;
 import com.exam.models.SinhVien;
 import com.exam.dao.LopDAO;
@@ -19,7 +21,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -37,7 +38,8 @@ import javafx.util.Callback;
 /**
  * Controller for the class management view
  */
-public class ClassManagementController implements Initializable {
+public class ClassManagementController extends BaseTeacherController {
+    private static final Logger LOGGER = Logger.getLogger(ClassManagementController.class.getName());
     
     @FXML private TextField txtMaLop;
     @FXML private TextField txtTenLop;
@@ -55,18 +57,56 @@ public class ClassManagementController implements Initializable {
     @FXML private TableColumn<SinhVien, String> colTen;
     @FXML private Button btnAddStudent;
     @FXML private Button btnRemoveStudent;
+    @FXML private TextField searchField;
     
     private final LopDAO lopDAO = new LopDAOImpl();
     private final SinhVienDAO sinhVienDAO = new SinhVienDAOImpl();
     private ObservableList<Lop> classData = FXCollections.observableArrayList();
     private ObservableList<SinhVien> studentData = FXCollections.observableArrayList();
     
+    // Store the original class data for search filtering
+    private List<Lop> allClasses;
+    
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    protected void initialize() {
         setupClassTable();
         setupStudentTable();
         setupButtons();
+        setupSearch();
         loadClassData();
+    }
+    
+    /**
+     * Set up search functionality
+     */
+    private void setupSearch() {
+        if (searchField != null) {
+            searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+                filterClasses(newValue);
+            });
+        }
+    }
+    
+    /**
+     * Filter classes based on search text
+     */
+    private void filterClasses(String searchText) {
+        final String searchLower = searchText.toLowerCase().trim();
+        
+        if (searchLower.isEmpty() && allClasses != null) {
+            // If search is empty, show all classes
+            classData.clear();
+            classData.addAll(allClasses);
+        } else if (allClasses != null) {
+            // Filter classes based on search text
+            List<Lop> filteredClasses = allClasses.stream()
+                .filter(lop -> lop.getMaLop().toLowerCase().contains(searchLower) || 
+                               lop.getTenLop().toLowerCase().contains(searchLower))
+                .collect(Collectors.toList());
+            
+            classData.clear();
+            classData.addAll(filteredClasses);
+        }
     }
     
     private void setupClassTable() {
@@ -132,10 +172,11 @@ public class ClassManagementController implements Initializable {
     private void loadClassData() {
         try {
             List<Lop> classes = lopDAO.findAll();
+            allClasses = classes; // Store all classes for filtering
             classData.clear();
             classData.addAll(classes);
         } catch (SQLException e) {
-            Logger.getLogger(ClassManagementController.class.getName()).log(Level.SEVERE, "Error loading class data", e);
+            LOGGER.log(Level.SEVERE, "Error loading class data", e);
             showAlert(AlertType.ERROR, "Database Error", "Could not load class data: " + e.getMessage());
         }
     }
@@ -146,7 +187,7 @@ public class ClassManagementController implements Initializable {
             studentData.clear();
             studentData.addAll(students);
         } catch (SQLException e) {
-            Logger.getLogger(ClassManagementController.class.getName()).log(Level.SEVERE, "Error loading student data", e);
+            LOGGER.log(Level.SEVERE, "Error loading student data", e);
             showAlert(AlertType.ERROR, "Database Error", "Could not load student data: " + e.getMessage());
         }
     }
@@ -185,7 +226,7 @@ public class ClassManagementController implements Initializable {
             clearForm();
             showAlert(AlertType.INFORMATION, "Success", "Class added successfully.");
         } catch (SQLException e) {
-            Logger.getLogger(ClassManagementController.class.getName()).log(Level.SEVERE, "Error adding class", e);
+            LOGGER.log(Level.SEVERE, "Error adding class", e);
             showAlert(AlertType.ERROR, "Database Error", "Could not add class: " + e.getMessage());
         }
     }
@@ -208,7 +249,7 @@ public class ClassManagementController implements Initializable {
             loadClassData();
             showAlert(AlertType.INFORMATION, "Success", "Class updated successfully.");
         } catch (SQLException e) {
-            Logger.getLogger(ClassManagementController.class.getName()).log(Level.SEVERE, "Error updating class", e);
+            LOGGER.log(Level.SEVERE, "Error updating class", e);
             showAlert(AlertType.ERROR, "Database Error", "Could not update class: " + e.getMessage());
         }
     }
@@ -235,7 +276,7 @@ public class ClassManagementController implements Initializable {
             clearForm();
             showAlert(AlertType.INFORMATION, "Success", "Class deleted successfully.");
         } catch (SQLException e) {
-            Logger.getLogger(ClassManagementController.class.getName()).log(Level.SEVERE, "Error deleting class", e);
+            LOGGER.log(Level.SEVERE, "Error deleting class", e);
             showAlert(AlertType.ERROR, "Database Error", "Could not delete class: " + e.getMessage());
         }
     }
@@ -267,7 +308,7 @@ public class ClassManagementController implements Initializable {
             // Reload students after dialog closes
             loadStudentsForClass(selectedClass);
         } catch (IOException e) {
-            Logger.getLogger(ClassManagementController.class.getName()).log(Level.SEVERE, "Error loading add student dialog", e);
+            LOGGER.log(Level.SEVERE, "Error loading add student dialog", e);
             showAlert(AlertType.ERROR, "Error", "Could not load add student dialog: " + e.getMessage());
         }
     }
@@ -286,7 +327,7 @@ public class ClassManagementController implements Initializable {
             loadStudentsForClass(selectedClass);
             showAlert(AlertType.INFORMATION, "Success", "Student removed from class successfully.");
         } catch (SQLException e) {
-            Logger.getLogger(ClassManagementController.class.getName()).log(Level.SEVERE, "Error removing student from class", e);
+            LOGGER.log(Level.SEVERE, "Error removing student from class", e);
             showAlert(AlertType.ERROR, "Database Error", "Could not remove student from class: " + e.getMessage());
         }
     }

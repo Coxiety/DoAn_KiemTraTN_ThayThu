@@ -22,8 +22,8 @@
         <!-- Search and Add Section -->
         <HBox spacing="10" alignment="CENTER_LEFT">
             <TextField fx:id="searchField" promptText="Search classes..." 
-                      HBox.hgrow="ALWAYS" onKeyReleased="#handleSearch"/>
-            <Button text="Add New Class" onAction="#handleAddNew"/>
+                      HBox.hgrow="ALWAYS"/>
+            <Button fx:id="btnAdd" text="Add New Class"/>
         </HBox>
 
         <!-- Split Pane for Class List and Student List -->
@@ -31,12 +31,11 @@
             <!-- Left Side - Class List -->
             <VBox spacing="10">
                 <Label text="Classes" styleClass="subtitle-label"/>
-                <TableView fx:id="classTable" VBox.vgrow="ALWAYS">
+                <TableView fx:id="tblClasses" VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="codeColumn" text="Class Code" prefWidth="100"/>
-                        <TableColumn fx:id="nameColumn" text="Class Name" prefWidth="150"/>
-                        <TableColumn fx:id="studentsColumn" text="Students" prefWidth="60"/>
-                        <TableColumn fx:id="actionsColumn" text="Actions" prefWidth="100"/>
+                        <TableColumn fx:id="colMaLop" text="Class Code" prefWidth="100"/>
+                        <TableColumn fx:id="colTenLop" text="Class Name" prefWidth="150"/>
+                        <TableColumn fx:id="colStudents" text="Students" prefWidth="60"/>
                     </columns>
                 </TableView>
             </VBox>
@@ -47,40 +46,43 @@
                     <Label text="Students in Class:" styleClass="subtitle-label"/>
                     <Label fx:id="selectedClassLabel" styleClass="info-label"/>
                     <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="Add Student" fx:id="addStudentButton" 
-                            onAction="#handleAddStudent" disable="true"/>
+                    <Button fx:id="btnAddStudent" text="Add Student" disable="true"/>
                 </HBox>
-                <TableView fx:id="studentTable" VBox.vgrow="ALWAYS">
+                <TableView fx:id="tblStudents" VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="studentIdColumn" text="Student ID" prefWidth="100"/>
-                        <TableColumn fx:id="studentNameColumn" text="Student Name" prefWidth="200"/>
-                        <TableColumn fx:id="studentActionsColumn" text="Actions" prefWidth="80"/>
+                        <TableColumn fx:id="colMaSV" text="Student ID" prefWidth="100"/>
+                        <TableColumn fx:id="colHo" text="Last Name" prefWidth="100"/>
+                        <TableColumn fx:id="colTen" text="First Name" prefWidth="100"/>
                     </columns>
                 </TableView>
             </VBox>
         </SplitPane>
 
         <!-- Form Section -->
-        <VBox fx:id="formSection" spacing="10" styleClass="form-container" visible="false">
+        <VBox spacing="10" styleClass="form-container">
             <Label text="Class Details" styleClass="subtitle-label"/>
             
             <GridPane hgap="10" vgap="10">
                 <Label text="Class Code:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-                <TextField fx:id="codeField" promptText="Enter class code"
+                <TextField fx:id="txtMaLop" promptText="Enter class code"
                           GridPane.columnIndex="1" GridPane.rowIndex="0"/>
                 
                 <Label text="Class Name:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                <TextField fx:id="nameField" promptText="Enter class name"
+                <TextField fx:id="txtTenLop" promptText="Enter class name"
                           GridPane.columnIndex="1" GridPane.rowIndex="1"/>
             </GridPane>
 
             <HBox spacing="10" alignment="CENTER_RIGHT">
-                <Button text="Cancel" onAction="#handleCancel" 
-                        styleClass="cancel-button"/>
-                <Button text="Save" onAction="#handleSave" 
-                        styleClass="save-button"/>
+                <Button fx:id="btnClear" text="Cancel"/>
+                <Button fx:id="btnUpdate" text="Save"/>
             </HBox>
         </VBox>
+
+        <!-- Button for Removing Students -->
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <Button fx:id="btnRemoveStudent" text="Remove Student"/>
+            <Button fx:id="btnDelete" text="Delete Class"/>
+        </HBox>
 
         <!-- Message Display -->
         <Label fx:id="messageLabel" styleClass="message-label"/>

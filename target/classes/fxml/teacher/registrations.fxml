@@ -3,6 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.collections.*?>
 
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
@@ -50,10 +51,10 @@
                 <Label text="Role:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
                 <ComboBox fx:id="roleComboBox" GridPane.columnIndex="1" GridPane.rowIndex="1">
                     <items>
-                        <FXCollections fx:factory="observableArrayList">
+                        <javafx.collections.FXCollections fx:factory="observableArrayList">
                             <String fx:value="GIAOVIEN"/>
                             <String fx:value="GIAMTHI"/>
-                        </FXCollections>
+                        </javafx.collections.FXCollections>
                     </items>
                 </ComboBox>
             </GridPane>
