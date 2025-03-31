@@ -58,8 +58,8 @@ public class AddStudentDialogController implements Initializable {
     private final SinhVienDAO sinhVienDAO = new SinhVienDAOImpl();
     private final LopDAO lopDAO = new LopDAOImpl();
     
-    private ObservableList<SinhVien> studentData = FXCollections.observableArrayList();
-    private ObservableList<Lop> classData = FXCollections.observableArrayList();
+    private final ObservableList<SinhVien> studentData = FXCollections.observableArrayList();
+    private final ObservableList<Lop> classData = FXCollections.observableArrayList();
     private Lop preselectedClass = null;
     private Runnable onCloseCallback = null;
     
